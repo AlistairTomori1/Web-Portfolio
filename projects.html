@@ -12,10 +12,11 @@
             margin: 0;
             min-height: 100vh;
             background: var(--beige);
-            color: #111;
-            font-family: 'Lato', sans-serif;
+            color: #ffffff;
+            font-family: Arial, "Helvetica Neue", Helvetica, system-ui;
             display: flex;
             justify-content: center;
+            overflow: hidden;
         }
         .page {
             width: min(1200px, 96vw);
@@ -26,28 +27,30 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 14px;
             margin-bottom: 20px;
         }
         .back {
             position: absolute;
-            left: 4px;
-            top: 0;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 32px;
-            height: 32px;
+            width: 80px;
+            height: 80px;
             text-decoration: none;
         }
         .back svg {
-            width: 20px;
-            height: 20px;
+            width: 80px;
+            height: 80px;
             display: block;
         }
         .title {
             margin: 0;
-            font-family: 'Cinzel', serif;
-            font-size: 40px;
+            font-family: Arial, "Helvetica Neue", Helvetica, system-ui;
+            font-size: 60px;
             letter-spacing: 0.02em;
         }
         .projects-shell {
@@ -60,6 +63,8 @@
             min-height: calc(100vh - 140px);
             display: flex;
             align-items: stretch;
+            position: relative;
+            overflow: hidden;
         }
         .projects-grid {
             width: 100%;
@@ -70,18 +75,40 @@
         }
         .project-card {
             border-radius: 12px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: 3px solid rgba(0, 0, 0, 0.18);
             background: rgba(255, 255, 255, 0.86);
             display: grid;
             grid-template-rows: 1fr auto auto;
             gap: 10px;
             padding: 10px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .project-card.disabled {
+            pointer-events: none;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .project-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+        }
+        .project-card:focus-visible {
+            outline: 2px solid #111;
+            outline-offset: 4px;
         }
         .project-thumb {
             width: 100%;
             background: #e8e8e8;
             border-radius: 10px;
             border: 1px dashed rgba(0, 0, 0, 0.1);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .project-thumb.has-image {
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background-color: #000;
         }
         .project-title {
             margin: 0;
@@ -95,13 +122,121 @@
             color: #333;
             line-height: 1.4;
         }
+        .project-detail {
+            position: absolute;
+            inset: 0;
+            background: #ffffff;
+            border-radius: 14px;
+            border: 2px solid rgba(130, 130, 130, 0.5);
+            padding: 24px;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 18px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .project-detail.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .detail-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .detail-label {
+            margin: 0;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #666;
+        }
+        .detail-title {
+            margin: 2px 0 0;
+            font-size: 36px;
+            letter-spacing: 0.01em;
+        }
+        .detail-close {
+            border: none;
+            background: #111;
+            color: #fff;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            font-size: 22px;
+            cursor: pointer;
+        }
+        .detail-body {
+            display: grid;
+            grid-template-columns: 2fr 1.1fr;
+            gap: 20px;
+            min-height: 0;
+        }
+        .detail-media {
+            background: #f2f2f2;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 4px solid #000;
+        }
+        .detail-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .detail-info {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 0;
+        }
+        .detail-long {
+            margin: 0;
+            line-height: 1.6;
+            color: #222;
+        }
+        .detail-meta {
+            display: grid;
+            gap: 12px;
+        }
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 12px;
+            background: #f7f7f7;
+            border-radius: 10px;
+        }
+        .meta-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #666;
+        }
+        .meta-value,
+        .meta-link {
+            font-size: 15px;
+            color: #111;
+            word-break: break-word;
+        }
+        .meta-link {
+            text-decoration: underline;
+            text-decoration-color: rgba(0, 0, 0, 0.4);
+            text-decoration-thickness: 1px;
+        }
         @media (max-width: 900px) {
             .projects-shell { min-height: auto; }
             .projects-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; }
+            .detail-body { grid-template-columns: 1fr; grid-template-rows: 220px 1fr; }
+            .detail-title { font-size: 28px; }
         }
         @media (max-width: 600px) {
             .title { font-size: 32px; }
             .projects-grid { grid-template-columns: 1fr; }
+            .detail-body { grid-template-rows: 200px 1fr; }
+            .detail-close { width: 36px; height: 36px; font-size: 18px; }
         }
     </style>
 </head>
@@ -109,8 +244,9 @@
     <div class="page">
         <div class="top-bar">
             <a class="back" href="index.html" aria-label="Back to home">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M14 5L7 12L14 19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                    <path d="M24 16H8" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M14 9L8 16L14 23" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </a>
             <h1 class="title">PROJECTS</h1>
@@ -118,53 +254,266 @@
 
         <div class="projects-shell">
             <main class="projects-grid" aria-label="Project placeholders">
-                <div class="project-card">
+                <div class="project-card" role="button" tabindex="0"
+                    data-title="Portfolio Rebuild"
+                    data-long="I hated my old portfolio, so I decided to remake it from scratch into something I am actually proud of. If you wanna see the old one check it out here: <a href=&quot;https://alistairtomori.com/old&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>alistairtomori.com/old</a>"
+                    data-languages="HTML, CSS, JavaScript"
+                    data-time="35 hours"
+                    data-created="December 2025"
+                    data-thumb="assets/Github.png"
+                    data-github="https://github.com/AlistairTomori1/Web-Portfolio"
+                    data-image="https://placehold.co/900x550?text=Portfolio+Rebuild">
                     <div class="project-thumb"></div>
-                    <h2 class="project-title">Project Title</h2>
-                    <p class="project-desc">Short description of the project goes here.</p>
+                    <h2 class="project-title">Portfolio Rebuild</h2>
+                    <p class="project-desc">Redid my web portfolio.</p>
                 </div>
-                <div class="project-card">
+                <div class="project-card" role="button" tabindex="0"
+                    data-title="YT2WP"
+                    data-long="This project was done for a client who needed a way for his youtube posts to be automatically published as blog posts on his wordpress site. This open source tool can be used through github actions, or a private vps server."
+                    data-languages="Python, YML"
+                    data-time="42 hours"
+                    data-created="October 2025"
+                    data-github="https://github.com/AlistairTomori1/yt2wp"
+                    data-image="assets/YT2WP.png">
                     <div class="project-thumb"></div>
-                    <h2 class="project-title">Project Title</h2>
-                    <p class="project-desc">Short description of the project goes here.</p>
+                    <h2 class="project-title">YT2WP</h2>
+                    <p class="project-desc">Publishes youtube posts as blog posts on wordpress site.</p>
                 </div>
-                <div class="project-card">
+                <div class="project-card" role="button" tabindex="0"
+                    data-title="Py Clash Bot for MacOS"
+                    data-long="Developed a MacOS version of Py Clash Bot, that is now availible for download on their official Github reop. Py Clash Bot is a bot used for farming crowns in Clash Royale. It has over 10,000 users worldwide."
+                    data-languages="Python"
+                    data-time="29 hours"
+                    data-created="November 2025"
+                    data-github="https://github.com/pyclashbot/py-clash-bot"
+                    data-image="assets/clashbot.png">
                     <div class="project-thumb"></div>
-                    <h2 class="project-title">Project Title</h2>
-                    <p class="project-desc">Short description of the project goes here.</p>
+                    <h2 class="project-title">Py Clash Bot for MacOS</h2>
+                    <p class="project-desc">Lead development for the MacOS version of Py Clash Bot.</p>
                 </div>
-                <div class="project-card">
+                <div class="project-card" role="button" tabindex="0"
+                    data-title="HackPad"
+                    data-long="Designed electrical and pcb schematics for a hackpad. Was accepted to recive all the parts needed to build a working one based on the design I made."
+                    data-languages="Python, KiCad, Fusion 360"
+                    data-time="35 hours"
+                    data-created="December 2025"
+                    data-github="https://github.com/AlistairTomori1/HackPad"
+                    data-image="assets/hackpad.png">
                     <div class="project-thumb"></div>
-                    <h2 class="project-title">Project Title</h2>
-                    <p class="project-desc">Short description of the project goes here.</p>
+                    <h2 class="project-title">HackPad</h2>
+                    <p class="project-desc">Created a hackpad using KiCad.</p>
                 </div>
-                <div class="project-card">
+                <div class="project-card" role="button" tabindex="0"
+                    data-title="Weather App"
+                    data-long="Pretty generic idea but I gotta fill my portfolio somehow. Basically just a website shell that fetches weather data from weather.com api."
+                    data-languages="HTML, CSS, JavaScript, Python"
+                    data-time="12 hours"
+                    data-created="November 2025"
+                    data-github="https://github.com/AlistairTomori1"
+                    data-image="assets/weather.png">
                     <div class="project-thumb"></div>
-                    <h2 class="project-title">Project Title</h2>
-                    <p class="project-desc">Short description of the project goes here.</p>
+                    <h2 class="project-title">Weather App</h2>
+                    <p class="project-desc">Local and weekly forecasts.</p>
                 </div>
-                <div class="project-card">
+                <div class="project-card" role="button" tabindex="0"
+                    data-title="(WIP) AI Stock Stock Predictor"
+                    data-long="An AI stock market predictor that uses historical data and current news to suggest reliable stock picks. Still in early development."
+                    data-languages="HTML, CSS, JavaScript, Python, TensorFlow"
+                    data-time="44 hours"
+                    data-created="October 2025"
+                    data-github="https://github.com/AlistairTomori1"
+                    data-image="assets/stocks.png">
                     <div class="project-thumb"></div>
-                    <h2 class="project-title">Project Title</h2>
-                    <p class="project-desc">Short description of the project goes here.</p>
+                    <h2 class="project-title">(WIP) AI Stock Stock Predictor</h2>
+                    <p class="project-desc">Reliable stock market predictor.</p>
                 </div>
-                <div class="project-card">
+                <div class="project-card" role="button" tabindex="0"
+                    data-title="Coming soon"
+                    data-long=""
+                    data-languages=""
+                    data-time=""
+                    data-created=""
+                    data-github=""
+                    data-image="">
                     <div class="project-thumb"></div>
-                    <h2 class="project-title">Project Title</h2>
-                    <p class="project-desc">Short description of the project goes here.</p>
+                    <h2 class="project-title">Coming soon</h2>
+                    <p class="project-desc"></p>
                 </div>
-                <div class="project-card">
+                <div class="project-card" role="button" tabindex="0"
+                    data-title="Coming soon"
+                    data-long=""
+                    data-languages=""
+                    data-time=""
+                    data-created=""
+                    data-github=""
+                    data-image="">
                     <div class="project-thumb"></div>
-                    <h2 class="project-title">Project Title</h2>
-                    <p class="project-desc">Short description of the project goes here.</p>
+                    <h2 class="project-title">Coming soon</h2>
+                    <p class="project-desc"></p>
                 </div>
-                <div class="project-card">
+                <div class="project-card" role="button" tabindex="0"
+                    data-title="Coming soon"
+                    data-long=""
+                    data-languages=""
+                    data-time=""
+                    data-created=""
+                    data-github=""
+                    data-image="">
                     <div class="project-thumb"></div>
-                    <h2 class="project-title">Project Title</h2>
-                    <p class="project-desc">Short description of the project goes here.</p>
+                    <h2 class="project-title">Coming soon</h2>
+                    <p class="project-desc"></p>
                 </div>
             </main>
+            <section class="project-detail" aria-live="polite" aria-label="Expanded project details">
+                <div class="detail-header">
+                    <div>
+                        <p class="detail-label">Project</p>
+                        <h2 class="detail-title">Portfolio Rebuild</h2>
+                    </div>
+                    <button class="detail-close" type="button" aria-label="Back to all projects">&times;</button>
+                </div>
+                <div class="detail-body">
+                    <div class="detail-media">
+                        <img class="detail-image" src="https://placehold.co/900x550?text=Project" alt="">
+                    </div>
+                    <div class="detail-info">
+                        <p class="detail-long">A ground-up rebuild of my personal portfolio focused on speed, accessibility, and a bold visual language.</p>
+                        <div class="detail-meta">
+                            <div class="meta-item">
+                                <span class="meta-label">Languages</span>
+                                <span class="meta-value" data-field="languages">HTML, CSS, JavaScript</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Time spent</span>
+                                <span class="meta-value" data-field="time">35 hours</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Created</span>
+                                <span class="meta-value" data-field="created">April 2024</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">GitHub</span>
+                                <a class="meta-link" data-field="github" href="#" target="_blank" rel="noopener">View repository</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
+        <script>
+            (() => {
+                const grid = document.querySelector('.projects-grid');
+                const detail = document.querySelector('.project-detail');
+                const detailTitle = detail?.querySelector('.detail-title');
+                const detailImage = detail?.querySelector('.detail-image');
+                const detailLong = detail?.querySelector('.detail-long');
+                const closeBtn = detail?.querySelector('.detail-close');
+                const fields = {
+                    languages: detail?.querySelector('[data-field="languages"]'),
+                    time: detail?.querySelector('[data-field="time"]'),
+                    created: detail?.querySelector('[data-field="created"]'),
+                    github: detail?.querySelector('[data-field="github"]'),
+                };
+                if (!grid || !detail) return;
+
+                const cards = Array.from(grid.querySelectorAll('.project-card'));
+                const placeholderImg = detailImage?.getAttribute('src') || '';
+                let lastActiveCard = null;
+
+                const setCardTabIndex = (value) => {
+                    cards.forEach((card) => {
+                        if (card.classList.contains('disabled')) return;
+                        card.setAttribute('tabindex', value);
+                    });
+                };
+
+                const isComingSoon = (card) => {
+                    const title = (card.dataset.title || '').trim().toLowerCase();
+                    return title === 'coming soon' || title === '(wip) coming soon';
+                };
+
+                const applyThumbs = () => {
+                    cards.forEach((card) => {
+                        if (isComingSoon(card)) {
+                            card.classList.add('disabled');
+                            card.setAttribute('aria-disabled', 'true');
+                            card.setAttribute('tabindex', '-1');
+                        }
+                        const thumb = card.querySelector('.project-thumb');
+                        const thumbSrc = card.dataset.thumb || card.dataset.image;
+                        if (thumb && thumbSrc) {
+                            thumb.style.backgroundImage = `url(${thumbSrc})`;
+                            thumb.classList.add('has-image');
+                        }
+                    });
+                };
+
+                const closeDetail = () => {
+                    detail.classList.remove('active');
+                    detail.setAttribute('aria-hidden', 'true');
+                    grid.removeAttribute('aria-hidden');
+                    setCardTabIndex('0');
+                    (lastActiveCard || cards[0])?.focus({ preventScroll: true });
+                };
+
+                const openDetail = (card) => {
+                    if (!card || !detailTitle || !detailLong || !detailImage) return;
+                    const { title, long, languages, time, created, github, image } = card.dataset;
+                    lastActiveCard = card;
+                    const fallbackDesc = card.querySelector('.project-desc')?.textContent?.trim() || '';
+                    detailTitle.textContent = title || card.querySelector('.project-title')?.textContent || 'Project';
+                    if (long) {
+                        detailLong.innerHTML = long;
+                    } else {
+                        detailLong.textContent = fallbackDesc;
+                    }
+                    fields.languages && (fields.languages.textContent = languages || 'Not specified');
+                    fields.time && (fields.time.textContent = time || 'Time not noted');
+                    fields.created && (fields.created.textContent = created || 'Date not noted');
+                    if (fields.github) {
+                        const link = github || '#';
+                        const normalize = (url) => (url || '').replace(/\/+$/, '');
+                        const isPrivateProfile = normalize(github) === normalize('https://github.com/AlistairTomori1');
+                        fields.github.setAttribute('href', link);
+                        fields.github.textContent = github
+                            ? (isPrivateProfile ? 'Private Repository' : 'Open repository')
+                            : 'Repository link';
+                    }
+                    detailImage.setAttribute('src', image || placeholderImg);
+                    detailImage.setAttribute('alt', title ? `${title} preview` : 'Project preview');
+                    detail.classList.add('active');
+                    detail.setAttribute('aria-hidden', 'false');
+                    grid.setAttribute('aria-hidden', 'true');
+                    setCardTabIndex('-1');
+                    closeBtn?.focus({ preventScroll: true });
+                };
+
+                grid.addEventListener('click', (event) => {
+                    const card = event.target.closest('.project-card');
+                    if (card && !isComingSoon(card)) openDetail(card);
+                });
+
+                grid.addEventListener('keydown', (event) => {
+                    if ((event.key === 'Enter' || event.key === ' ') && event.target.closest('.project-card')) {
+                        event.preventDefault();
+                        const targetCard = event.target.closest('.project-card');
+                        if (targetCard && !isComingSoon(targetCard)) {
+                            openDetail(targetCard);
+                        }
+                    }
+                });
+
+                closeBtn?.addEventListener('click', closeDetail);
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape' && detail.classList.contains('active')) {
+                        closeDetail();
+                    }
+                });
+
+                detail.setAttribute('aria-hidden', 'true');
+                applyThumbs();
+            })();
+        </script>
     </div>
 </body>
 </html>
