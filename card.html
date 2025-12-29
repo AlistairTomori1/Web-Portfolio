@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alistair Tomori - 3D Card</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Standard US Business Card: 3.5in x 2in (Aspect Ratio 1.75) */
+            --card-width: 400px;
+            --card-height: 228px; 
+            
+            /* High-Intensity Gold Palette */
+            --gold-pale: #fff9d6;
+            --gold-bright: #ffdd00; 
+            --gold-deep: #cc9900;
+            
+            --paper-color: #fdfdfd;
+            --bg-color: #080808;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            margin: 0;
+            font-family: 'Lato', sans-serif;
+            /* Deep perspective for the flip */
+            perspective: 1500px; 
+        }
+
+        .card-scene {
+            width: var(--card-width);
+            height: var(--card-height);
+            position: relative;
+            cursor: pointer;
+            /* This tilt logic is applied by JS, but we set a default here */
+            transform-style: preserve-3d;
+        }
+
+        /* The container that actually flips */
+        .card-object {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d; /* CRITICAL: Allows children to exist in 3D space */
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy premium feel */
+        }
+
+        /* Hover Action */
+        .card-scene:hover .card-object {
+            transform: rotateY(180deg);
+        }
+
+        /* --- FACE STYLING --- */
+        .face {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            /* The 'hidden' property fixes the mirror effect */
+            -webkit-backface-visibility: hidden; 
+            backface-visibility: hidden;
+            
+            /* We need a dark base so the glowing border stands out */
+            background-color: #000;
+            overflow: hidden; 
+            
+            /* Outer shadow for depth */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        /* The Front is default */
+        .face.front {
+            transform: rotateY(0deg);
+            z-index: 2;
+        }
+
+        /* The Back is pre-rotated 180deg */
+        .face.back {
+            transform: rotateY(180deg);
+            z-index: 1;
+        }
+
+        /* --- THE GLOW ANIMATION --- */
+        /* This pseudo-element spins behind the white paper */
+        .face::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            
+            /* Hard stop gradients create a beam of light */
+            background: conic-gradient(
+                transparent 0deg, 
+                transparent 90deg,
+                var(--gold-deep) 130deg,
+                var(--gold-bright) 180deg, 
+                var(--gold-pale) 220deg,
+                var(--gold-bright) 260deg,
+                var(--gold-deep) 310deg,
+                transparent 360deg
+            );
+            
+            animation: spin 3s linear infinite;
+            /* This makes it glow like neon */
+            filter: blur(0px) drop-shadow(0 0 10px var(--gold-bright));
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- THE PAPER MASK --- */
+        /* This covers the center, leaving only the glowing edge visible */
+        .face::after {
+            content: '';
+            position: absolute;
+            inset: 3px; /* Border thickness */
+            background: var(--paper-color);
+            border-radius: 9px;
+            z-index: 0;
+        }
+
+        /* --- CONTENT LAYER --- */
+        .content {
+            position: relative;
+            z-index: 10; /* Must be higher than ::after */
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            
+            /* Texture for realism */
+            background-image: url("https://www.transparenttextures.com/patterns/cream-paper.png");
+            background-blend-mode: multiply;
+        }
+
+        /* --- TYPOGRAPHY --- */
+        .logo-mark {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: var(--gold-deep);
+            /* Gradient Text */
+            background: linear-gradient(135deg, var(--gold-deep), var(--gold-bright), var(--gold-deep));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            color: #222;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .title {
+            font-family: 'Lato', sans-serif;
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #b8860b;
+            margin-top: 8px;
+            font-weight: 700;
+        }
+
+        /* Email Style on Back */
+        .email-link {
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            color: #111;
+            text-decoration: none;
+            position: relative;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+        }
+
+        .email-link::after {
+            content: '';
+            position: absolute;
+            width: 0%;
+            height: 1px;
+            bottom: -5px;
+            left: 50%;
+            background: var(--gold-deep);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .email-link:hover {
+            color: var(--gold-deep);
+        }
+        
+        .email-link:hover::after {
+            width: 100%;
+        }
+
+        /* Realism Reflection */
+        .shine {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 60%);
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="card-scene" id="cardScene">
+        <div class="card-object" id="cardObject">
+            
+            <div class="face front">
+                <div class="content">
+                    <div class="logo-mark">❖</div>
+                    <h1>Alistair Tomori</h1>
+                    <p class="title">Director</p>
+                </div>
+                <div class="shine"></div>
+            </div>
+
+            <div class="face back">
+                <div class="content">
+                    <a href="mailto:alistair@tomori.com" class="email-link">alistair@tomori.com</a>
+                </div>
+                <div class="shine"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 3D PARALLAX TILT EFFECT
+        const cardScene = document.getElementById('cardScene');
+
+        cardScene.addEventListener('mousemove', (e) => {
+            const rect = cardScene.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+
+            // Reduce these numbers if you want less tilt
+            const rotateX = (y / rect.height) * -25; 
+            const rotateY = (x / rect.width) * 25;
+
+            // Applying the tilt to the SCENE wrapper, so it doesn't conflict with the flip
+            cardScene.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+
+        // Reset when mouse leaves
+        cardScene.addEventListener('mouseleave', () => {
+            cardScene.style.transform = 'rotateX(0) rotateY(0)';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alistair Tomori</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --scroll-speed: 20; /* pixels per second */
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #ffffff;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            pointer-events: none;
+            padding: 30px 0 60px;
+            box-sizing: border-box;
+        }
+        .widget-grid {
+            width: min(1100px, 92vw);
+            display: grid;
+            grid-template-columns: 350px 1.1fr 0.9fr;
+            grid-template-rows: auto auto auto;
+            grid-template-areas:
+                "a a b"
+                "c d b"
+                "e e f";
+            gap: 18px;
+            pointer-events: auto;
+        }
+        .widget {
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.32);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(18px);
+            border: 2px solid rgba(130, 130, 130, 0.5);
+            min-height: 140px;
+            padding: 24px 18px;
+            box-sizing: border-box;
+            color: #111;
+        }
+        .a { grid-area: a; min-height: 300px; }
+        .b { grid-area: b; min-height: 320px; }
+        .c {
+            grid-area: c;
+            min-height: 200px;
+            height: 200px;
+            aspect-ratio: 3.5 / 2;
+            width: 100%;
+            max-width: 350px;
+            justify-self: start;
+            align-self: start;
+
+            /* Make the widget act like a stage for the business card */
+            padding: 0px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            /* Make the container invisible (so the card REPLACES the widget look) */
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+        .d { grid-area: d; min-height: 200px; }
+        .e { grid-area: e; min-height: 200px; }
+        .f { grid-area: f; min-height: 200px; }
+        .profile {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 22px;
+            align-items: center;
+            height: 100%;
+        }
+        .avatar {
+            margin-top: -50px;
+            align-self: top;
+            height: 90%;
+            max-height: 260px;
+            min-height: 260px;
+            aspect-ratio: 1 / 1;
+            width: auto;
+            border-radius: 12px;
+            flex-shrink: 0;
+            object-fit: cover;
+            display: block;
+        }
+        .profile h1 {
+            margin: -10px 0 8px;
+            font-size: 56px;
+            line-height: 1;
+            letter-spacing: -0.03em;
+            font-family: Arial, "Helvetica Neue", Helvetica, system-ui, -apple-system, sans-serif;
+        }
+        .profile p {
+            margin: 0;
+            color: #222;
+            line-height: 1.5;
+            max-width: 640px;
+            font-family: Arial, "Helvetica Neue", Helvetica, system-ui, -apple-system, sans-serif;
+        }
+        .actions {
+            margin-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 6px;
+            border-radius: 12px;
+            background: #ffffff;
+            border: 1px solid #d0d0d0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            color: #111;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 12px rgba(0,0,0,0.12); }
+        .btn:active { transform: translateY(1px); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+        .btn .icon {
+            width: 26px;
+            height: 26px;
+            display: block;
+            object-fit: contain;
+        }
+
+        .about {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            padding: 18px 22px;
+            background: rgba(255, 255, 255, 0.62);
+            border-color: rgba(160, 160, 160, 0.5);
+            box-shadow:
+                0 18px 45px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.65);
+        }
+        .about-body {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+            color: #0f0f0f;
+        }
+        .about .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            align-self: flex-start;
+            padding: 7px 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(170, 170, 170, 0.5);
+            border-radius: 999px;
+            color: #303030;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                0 10px 30px rgba(0, 0, 0, 0.04);
+        }
+        .about .eyebrow .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #c8c8c8;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+        }
+        .about h2 {
+            margin: 6px 0 6px;
+            font-family: Arial, "Helvetica Neue", Helvetica, system-ui;
+            font-size: 30px;
+            line-height: 1.15;
+            letter-spacing: -0.01em;
+            color: #111;
+        }
+        .about .lead {
+            margin: 0;
+            font-family: Arial, "Helvetica Neue", Helvetica, system-ui;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #161616;
+        }
+        .about-grid {
+            margin-top: 6px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 12px;
+        }
+        .about-stat {
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(180, 180, 180, 0.6);
+            background: rgba(255, 255, 255, 0.65);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                0 12px 28px rgba(0, 0, 0, 0.05);
+        }
+        .about-label {
+            display: inline-block;
+            font-family: Arial, "Helvetica Neue", Helvetica, system-ui;
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #3d3d3d;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+        .about-value {
+            display: block;
+            font-family: Arial, "Helvetica Neue", Helvetica, system-ui;
+            font-size: 15px;
+            line-height: 1.5;
+            color: #121212;
+        }
+
+        /* Project tile (Widget D) */
+        .d {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .project-ink {
+            position: absolute;
+            inset: 0;
+            background: #d7c3a1;
+            border-radius: 12px;
+            transform: scale(0);
+            transform-origin: center;
+            transition: transform 0.32s ease;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .d:hover .project-ink {
+            transform: scale(1);
+        }
+        .project-square {
+            position: relative;
+            z-index: 2;
+            width: 175px;
+            height: 75px;
+            aspect-ratio: 1 / 1;
+            border: none;
+            border-radius: 8px;
+            background: #d7c3a1;
+            color: #ffffff;
+            font-size: 18px;
+            font-family: Arial, "Helvetica Neue", Helvetica, system-ui;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .d:hover .project-square {
+            transform: translateY(-2px);
+        }
+        .project-screen-ink {
+            position: fixed;
+            inset: 0;
+            background: #d7c3a1;
+            clip-path: circle(0% at var(--cx) var(--cy));
+            transition: clip-path 0.45s ease-out;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .project-screen-ink.is-active {
+            clip-path: circle(160% at var(--cx) var(--cy));
+        }
+       
+        @media (max-width: 900px) {
+            .widget-grid {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "a"
+                    "b"
+                    "c"
+                    "d"
+                    "e"
+                    "f";
+            }
+        }
+
+        /* ===============================
+           3D BUSINESS CARD (Widget C)
+           Scoped so it won't affect the rest of the page
+           =============================== */
+
+        .bizcard-wrap {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1500px;
+        }
+
+        .bizcard-scene {
+            width: 100%;
+            height: 100%;
+            max-width: 350px;
+            aspect-ratio: 3.5 / 2;
+            position: relative;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        .bizcard-object {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Hover flip on desktops only */
+        @media (hover: hover) and (pointer: fine) {
+            .bizcard-scene:hover .bizcard-object {
+                transform: rotateY(180deg);
+            }
+        }
+
+        /* Tap-to-flip on touch devices (and also works on desktop if you want it) */
+        .bizcard-scene.is-flipped .bizcard-object {
+            transform: rotateY(180deg);
+        }
+
+        .bizcard-face {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            background-color: #000;
+            overflow: hidden;
+            box-shadow:
+                0 20px 50px rgba(0,0,0,0.35),
+                0 0 18px rgba(255, 221, 0, 0.16),
+                0 0 42px rgba(255, 221, 0, 0.10);
+        }
+
+        .bizcard-face.front {
+            transform: rotateY(0deg);
+            z-index: 2;
+        }
+
+        .bizcard-face.back {
+            transform: rotateY(180deg);
+            z-index: 1;
+        }
+
+        /* Gold edge shimmer (always-visible gold border + moving highlight) */
+        .bizcard-face::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            border-radius: inherit;
+
+            /* Base gold border gradient */
+            background: linear-gradient(
+                120deg,
+                rgba(204, 153, 0, 1) 0%,
+                rgba(255, 221, 0, 1) 16%,
+                rgba(255, 249, 214, 1) 24%,
+                rgba(255, 255, 255, 1) 28%,
+                rgba(255, 249, 214, 1) 32%,
+                rgba(255, 221, 0, 1) 40%,
+                rgba(204, 153, 0, 1) 55%,
+                rgba(255, 221, 0, 1) 72%,
+                rgba(204, 153, 0, 1) 100%
+            );
+            background-size: 260% 260%;
+            animation: bizcardShimmer 2.2s linear infinite alternate;
+            filter:
+                drop-shadow(0 0 10px rgba(255, 221, 0, 0.75))
+                drop-shadow(0 0 22px rgba(255, 221, 0, 0.45))
+                drop-shadow(0 0 40px rgba(255, 221, 0, 0.25));
+            opacity: 0.98;
+        }
+
+        @keyframes bizcardShimmer {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        /* Paper mask to reveal only the glowing edge */
+        .bizcard-face::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: #fdfdfd;
+            border-radius: 9px;
+            -webkit-mask-image: -webkit-radial-gradient(white, black);
+            z-index: 1;
+        }
+
+        .bizcard-content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        .bizcard-logo-mark {
+            font-size: 32px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #cc9900, #ffdd00, #cc9900);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+        }
+
+        .bizcard-name {
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            color: #222;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .bizcard-title {
+            font-family: 'Lato', sans-serif;
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #b8860b;
+            margin-top: 8px;
+            font-weight: 700;
+        }
+
+        .bizcard-email {
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            color: #111;
+            text-decoration: none;
+            position: relative;
+            letter-spacing: 0.5px;
+            transition: color 0.25s ease;
+        }
+
+        .bizcard-email::after {
+            content: '';
+            position: absolute;
+            width: 0%;
+            height: 1px;
+            bottom: -5px;
+            left: 50%;
+            background: #cc9900;
+            transition: width 0.25s ease;
+            transform: translateX(-50%);
+        }
+
+        .bizcard-email:hover {
+            color: #cc9900;
+        }
+
+        .bizcard-email:hover::after {
+            width: 100%;
+        }
+
+        .bizcard-shine {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 20;
+
+            /* A bright white “beam” that sweeps across the whole card */
+            background: linear-gradient(
+                120deg,
+                rgba(255,255,255,0) 35%,
+                rgba(255,255,255,0.92) 50%,
+                rgba(255,255,255,0) 65%
+            );
+            filter:
+                blur(0.2px)
+                drop-shadow(0 0 10px rgba(255,255,255,0.35))
+                drop-shadow(0 0 22px rgba(255,255,255,0.22));
+            mix-blend-mode: screen;
+
+            /* Start invisible; the keyframes will bring it in briefly */
+            opacity: 0;
+            transform: translateX(-160%);
+            animation: bizcardSweep 2.0s ease-in-out infinite;
+            will-change: transform, opacity;
+        }
+
+        @keyframes bizcardSweep {
+            0%   { opacity: 0; transform: translateX(-160%); }
+            18%  { opacity: 0; transform: translateX(-160%); }
+            28%  { opacity: 0.75; transform: translateX(-90%); }
+            50%  { opacity: 0.85; transform: translateX(0%); }
+            72%  { opacity: 0.75; transform: translateX(90%); }
+            82%  { opacity: 0; transform: translateX(160%); }
+            100% { opacity: 0; transform: translateX(160%); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .bizcard-object { transition: none; }
+            .bizcard-face::before { animation: none; }
+            .bizcard-shine { animation: none; opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="brickCanvas" aria-hidden="true"></canvas>
+    <div class="overlay">
+        <div class="widget-grid">
+            <div class="widget a">
+                <div class="profile">
+                    <img class="avatar" src="assets/alistair.heic" alt="Alistair Tomori memoji">
+                    <div>
+                        <h1>Alistair Tomori</h1>
+                        <p>16 year old developer from Canada</p>
+                        <div class="actions">
+                            <a class="btn git" href="https://github.com/AlistairTomori1" target="_blank" rel="noopener noreferrer">
+                                <img class="icon" src="assets/Github.png" alt="GitHub">
+                                
+                            </a>
+                            <a class="btn li" href="https://www.linkedin.com/in/alistair-tomori" target="_blank" rel="noopener noreferrer">
+                                <img class="icon" src="assets/linkedin.png" alt="LinkedIn">
+                                
+                            </a>
+                            <a class="btn ig" href="https://www.instagram.com/alistairtomori/" target="_blank" rel="noopener noreferrer">
+                                <img class="icon" src="assets/instagram.png" alt="Instagram">
+                                
+                            </a>
+                            <a class="btn mail" href="mailto:alistair@tomori.com" target="_blank" rel="noopener noreferrer">
+                                <img class="icon" src="assets/email.png" alt="Email">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="widget b about">
+                <div class="about-body">
+                    <h2>About Me</h2>
+                    <p class="lead">I'm Alistair Tomori, a software developer from Canada. I love building things and solving problems. I enjoy being a web developer because it allows me to express creativity. Each website I build I consider to be a peice of art that I am making. </p>
+                    <div class="about-grid">
+                        <div class="about-stat">
+                            <span class="about-label">What I Do</span>
+                            <span class="about-value">Right now I am focused on web design just for fun/to make some extra money.</span>
+                        </div>
+                        <div class="about-stat">
+                            <span class="about-label">What I Want To Do</span>
+                            <span class="about-value">I am planning on going to university and studying mechanical engineering.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="c">
+                <div class="bizcard-wrap">
+                    <div class="bizcard-scene" id="bizcardScene" aria-label="Business card. Hover or tap to flip.">
+                        <div class="bizcard-object" id="bizcardObject">
+
+                            <div class="bizcard-face front">
+                                <div class="bizcard-content">
+                                    <div class="bizcard-logo-mark">❖</div>
+                                    <h2 class="bizcard-name">Alistair Tomori</h2>
+                                    <p class="bizcard-title">Software Developer</p>
+                                </div>
+                                <div class="bizcard-shine"></div>
+                            </div>
+
+                            <div class="bizcard-face back">
+                                <div class="bizcard-content">
+                                    <a href="mailto:alistair@tomori.com" class="bizcard-email">alistair@tomori.com</a>
+                                </div>
+                                <div class="bizcard-shine"></div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="widget d" id="projectWidget">
+                <div class="project-ink" aria-hidden="true"></div>
+                <button class="project-square" id="projectSquare" aria-label="View projects">My Projects</button>
+            </div>
+            <div class="widget e"></div>
+            <div class="widget f"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const brickWidth = 35;
+        const brickHeight = 17;
+        const spacing = 4;
+        const scrollSpeed = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--scroll-speed')) || 12;
+        
+        // Colors and thickness
+        const backgroundColor = '#ffffff';
+        const brickFillColor = '#ffffff';
+        const brickOutlineColor = '#f1f1f1';
+        const outlineThickness = 2; // in CSS pixels
+
+        // For odd line widths, align to the pixel grid.
+        const coordinateShift = outlineThickness % 2 !== 0 ? 0.5 : 0;
+
+        const stepX = brickWidth + spacing;
+        const stepY = brickHeight + spacing;
+
+        const canvas = document.getElementById('brickCanvas');
+        const ctx = canvas.getContext('2d');
+        let dpr = window.devicePixelRatio || 1;
+        let width = 0;
+        let height = 0;
+        let yOffset = 0;
+        let lastTime = performance.now();
+
+        function resize() {
+            dpr = window.devicePixelRatio || 1;
+            width = Math.ceil(window.innerWidth);
+            height = Math.ceil(window.innerHeight);
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+        }
+
+        function draw() {
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.fillStyle = backgroundColor;
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.fillStyle = brickFillColor;
+            ctx.strokeStyle = brickOutlineColor;
+            ctx.lineWidth = outlineThickness;
+            ctx.lineJoin = 'miter';
+
+            // Draw enough rows/cols to cover viewport, start one row above for wrap.
+            const rowsWhole = Math.floor(yOffset / stepY);
+            const offset = yOffset - rowsWhole * stepY;
+            const startRow = -1 - rowsWhole;
+            const rows = Math.ceil(height / stepY) + 3;
+            const cols = Math.ceil(width / stepX) + 3;
+            const baseY = -stepY + offset + coordinateShift;
+
+            for (let r = 0; r < rows; r++) {
+                const rowIndex = startRow + r;
+                const isEven = rowIndex % 2 === 0;
+                const rowOffset = isEven ? 0 : -(stepX / 2);
+                const y = baseY + r * stepY;
+                for (let c = -1; c < cols; c++) {
+                    const x = rowOffset + c * stepX + coordinateShift;
+                    ctx.fillRect(x, y, brickWidth, brickHeight);
+                    ctx.strokeRect(x, y, brickWidth, brickHeight);
+                }
+            }
+        }
+
+        function animate(now) {
+            const delta = now - lastTime;
+            lastTime = now;
+            yOffset += (scrollSpeed * delta) / 1000;
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        function handleResize() {
+            resize();
+            draw();
+        }
+
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        if (window.matchMedia) {
+            window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`)
+              .addEventListener('change', handleResize);
+        }
+
+        requestAnimationFrame(animate);
+    </script>
+
+    <script>
+        // Projects widget hover/click effect
+        (function () {
+            const widget = document.getElementById('projectWidget');
+            if (!widget) return;
+
+            const targetUrl = 'projects.html';
+
+            function triggerTransition() {
+                const rect = widget.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+
+                const overlay = document.createElement('div');
+                overlay.className = 'project-screen-ink';
+                overlay.style.setProperty('--cx', `${cx}px`);
+                overlay.style.setProperty('--cy', `${cy}px`);
+                document.body.appendChild(overlay);
+
+                requestAnimationFrame(() => {
+                    overlay.classList.add('is-active');
+                });
+
+                const navigate = () => {
+                    window.location.href = targetUrl;
+                };
+
+                overlay.addEventListener('transitionend', navigate, { once: true });
+                setTimeout(navigate, 600); // Fallback in case transitionend doesn't fire
+            }
+
+            widget.addEventListener('click', (e) => {
+                e.preventDefault();
+                triggerTransition();
+            });
+        })();
+    </script>
+
+    <script>
+        // 3D PARALLAX TILT + TAP-TO-FLIP (Business Card)
+        (function () {
+            const scene = document.getElementById('bizcardScene');
+            if (!scene) return;
+
+            const finePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+            const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            // Tap / click to flip (useful on touch devices)
+            scene.addEventListener('click', () => {
+                scene.classList.toggle('is-flipped');
+            });
+
+            // Tilt only when it makes sense
+            if (!finePointer || reduceMotion) return;
+
+            scene.addEventListener('mousemove', (e) => {
+                const rect = scene.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+
+                // Premium but controlled tilt
+                const rotateX = (y / rect.height) * -16;
+                const rotateY = (x / rect.width) * 16;
+
+                scene.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+
+            scene.addEventListener('mouseleave', () => {
+                scene.style.transform = 'rotateX(0deg) rotateY(0deg)';
+            });
+        })();
+    </script>
+
+</body>
+</html>
